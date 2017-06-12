@@ -31,9 +31,9 @@ var authorizationUri = oauth2.authorizationCode.authorizeURL({
 var token = null;
 
 try {
-	token = oauth2.accessToken.create(JSON.parse(fs.readFileSync('.testapptoken', 'utf8')).token);
+  token = oauth2.accessToken.create(JSON.parse(fs.readFileSync('.testapptoken', 'utf8')).token);
 } catch (e) {
-	console.log('Token not found on disk.');
+  console.log('Token not found on disk.');
 }
 
 var msg = `========${siteurl}========`
@@ -43,43 +43,41 @@ console.log(msg.replace(/./g, '-'));
 
 app.get('/callback', (req, res, next) => {
   if (req.query.err) return res.send(500, req.query.err);
-	var tokenConfig = {
-		code: req.query.code,
-		redirect_uri: `${appurl}/callback`
-	};
+  var tokenConfig = {
+    code: req.query.code,
+    redirect_uri: `${appurl}/callback`
+  };
 
-	oauth2.authorizationCode.getToken(tokenConfig)
-	.then((result) => {
-		token = oauth2.accessToken.create(result);
-		fs.writeFileSync('.testapptoken', JSON.stringify(token));
-		console.log('Got token.');
-		res.redirect('/');
-	})
-	.catch(err => {next(err)});
+  oauth2.authorizationCode.getToken(tokenConfig).then((result) => {
+    token = oauth2.accessToken.create(result);
+    fs.writeFileSync('.testapptoken', JSON.stringify(token));
+    console.log('Got token.');
+    res.redirect('/');
+  }).catch(err => {next(err)});
 });
 
 app.use((req, res, next) => {
-	if (token) {
-		if (token.expired()) {
-			token.refresh().then((result) => {
-				token = result;
-				fs.writeFileSync('.testapptoken', JSON.stringify(token));
-				next();
-			}).catch(err => {next(err)});
-		} else {
-			return next();
+  if (token) {
+    if (token.expired()) {
+      token.refresh().then((result) => {
+        token = result;
+        fs.writeFileSync('.testapptoken', JSON.stringify(token));
+        next();
+      }).catch(err => {next(err)});
+    } else {
+      return next();
     }
 
 
-	} else {
-		res.redirect(authorizationUri);
-	}
+  } else {
+    res.redirect(authorizationUri);
+  }
 }, (req, res, next) => {
-	request.get(`${siteurl + req.url}`).authBearer(token.token.access_token).end((err, apiRes) => {
-		if (err) return next(err);
-		var raw = _.escape(JSON.stringify(apiRes.body, null, ' '));
-		var decorated = raw.replace(/(&quot;)((?:http|\/)(?:(?!&quot;).)+)/g, '$1<a href="$2">$2</a>');
-		res.send(`<html>
+  request.get(`${siteurl + req.url}`).authBearer(token.token.access_token).end((err, apiRes) => {
+    if (err) return next(err);
+    var raw = _.escape(JSON.stringify(apiRes.body, null, ' '));
+    var decorated = raw.replace(/(&quot;)((?:http|\/)(?:(?!&quot;).)+)/g, '$1<a href="$2">$2</a>');
+    res.send(`<html>
 <head>
 <title>testapp</title>
 <link rel="stylesheet" href="//cdn.jsdelivr.net/highlight.js/9.11.0/styles/default.min.css">
@@ -88,7 +86,7 @@ app.use((req, res, next) => {
 <body>
 <pre><code class="json">${decorated}</code></pre>
 <script>hljs.initHighlightingOnLoad();</script>`)
-	});
+  });
 });
 
 // Start app 
