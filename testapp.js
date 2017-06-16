@@ -24,7 +24,7 @@ var oauth2 = OAuth2.create({
 });
 var authorizationUri = oauth2.authorizationCode.authorizeURL({
   redirect_uri: `${appurl}/callback`,
-  scope: 'core offline',
+  scope: `${process.env.TESTAPP_SITE} offline`,
   state: Math.random().toString(36).slice(2)
 });
 
